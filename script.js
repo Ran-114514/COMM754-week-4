@@ -49,44 +49,51 @@ function loadData() {
         skipEmptyLines: true,
 
         complete: function (results) {
-            state.all = results.data
-                .map(row => ({
-                    Country: row.Country,
-                    ISO3: row.ISO3,
-                    Region: row.Region,
-                    IncomeGroup: row.IncomeGroup,
-                    PopulationMillions: cleanNumber(row.PopulationMillions),
-                    HealthSpendPerCapitaUSD: cleanNumber(row.HealthSpendPerCapitaUSD),
-                    LifeExpectancyYears: cleanNumber(row.LifeExpectancyYears),
-                    Latitude: cleanNumber(row.Latitude),
-                    Longitude: cleanNumber(row.Longitude)
-                }))
-                // Any row missing either measurement would quietly corrupt the charts.
-                .filter(row =>
-                    row.Country &&
-                    Number.isFinite(row.HealthSpendPerCapitaUSD) &&
-                    Number.isFinite(row.LifeExpectancyYears)
-                );
-
-            console.log('Parsed rows:', state.all.length);
-
-            buildFilters();
-            bindControls();
-            applyFilters();
-
-            document.dispatchEvent(new CustomEvent('healthdata:ready', { detail: state.filtered }));
+            useRows(toRows(results.data));
         },
 
         error: function (err) {
-            console.error('Failed to load CSV', err);
+            console.error('Failed to load healthdata.csv', err);
             setStatus(
-                'Could not load healthdata.csv. Opening index.html straight from disk (file://) ' +
-                'blocks the download because of browser security. Serve the folder over http ' +
-                'instead - see README.md - or publish it on GitHub Pages.',
+                'Could not load healthdata.csv. Opening this page straight from disk (file://) ' +
+                'blocks the download because of browser security - serve the folder over http ' +
+                'instead (see README.md) or publish it on GitHub Pages.',
                 true
             );
         }
     });
+}
+
+function toRows(data) {
+    return data
+        .map(row => ({
+            Country: row.Country,
+            ISO3: row.ISO3,
+            Region: row.Region,
+            IncomeGroup: row.IncomeGroup,
+            PopulationMillions: cleanNumber(row.PopulationMillions),
+            HealthSpendPerCapitaUSD: cleanNumber(row.HealthSpendPerCapitaUSD),
+            LifeExpectancyYears: cleanNumber(row.LifeExpectancyYears),
+            Latitude: cleanNumber(row.Latitude),
+            Longitude: cleanNumber(row.Longitude)
+        }))
+        // Any row missing either measurement would silently corrupt the charts.
+        .filter(row =>
+            row.Country &&
+            Number.isFinite(row.HealthSpendPerCapitaUSD) &&
+            Number.isFinite(row.LifeExpectancyYears)
+        );
+}
+
+function useRows(rows) {
+    state.all = rows;
+    console.log('Parsed rows:', state.all.length);
+
+    buildFilters();
+    bindControls();
+    applyFilters();
+
+    document.dispatchEvent(new CustomEvent('healthdata:ready', { detail: state.filtered }));
 }
 
 function buildFilters() {
