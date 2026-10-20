@@ -22,40 +22,69 @@ written reflection is in [REFLECTION.md](REFLECTION.md).
 | `healthdata.csv` | 100 rows, 9 columns, one header row |
 | `map.html` | Leaflet page with a toggle between bubble map and heat map |
 | `mapscript.js` | Builds both map layers from the same CSV, plus the tile fallback |
+| `README.md` | This file: sources, cleaning log, debugging log, caveats |
 | `REFLECTION.md` | Blog reflection (English + 中文) linking the build to Schrock (2016) |
+
+## How the pages get their data
+
+`index.html` and `map.html` both read `healthdata.csv` with `Papa.parse()`, which is the point of the
+exercise — the CSV is the single source of truth, and there is no second copy anywhere. Edit the
+CSV and both pages change immediately.
+
+Because the data is fetched, the pages must be served rather than opened from disk:
+
+| How you open it | What happens |
+|---|---|
+| Local web server (`python3 -m http.server`) | works — reads `healthdata.csv` |
+| GitHub Pages | works — reads `healthdata.csv` |
+| Double-clicking the HTML (`file://`) | **blank table**; the browser blocks the download. The page now says so in red, instead of failing silently |
+
+That `file://` behaviour is not a bug in the page — it is the browser's security rule, and it is the
+same one the workshop notes in Step 6. It disappears once the folder is served or published.
 
 ## The data
 
-Pulled from the [World Bank Open Data](https://data.worldbank.org/) API on 20 October 2026:
+Pulled from the World Bank API on 20 October 2026 (the API's own last update was 8 October 2026).
+**Every figure is for 2023** — the most recent year with near-complete coverage for all three
+indicators; health spending currently covers only 24 countries for 2024. No year is mixed with
+another, and countries without a published 2023 value were dropped.
 
-| Indicator | Code | Latest year used |
-|---|---|---|
-| Current health expenditure per capita (current US$) | `SH.XPD.CHEX.PC.CD` | 2022–2023 |
-| Life expectancy at birth, total (years) | `SP.DYN.LE00.IN` | 2023 |
-| Population, total | `SP.POP.TOTL` | 2023 |
+`healthdata.csv` is the only copy of the data in this project — the pages read it at runtime, so
+refreshing the numbers means replacing this one file.
+
+| Indicator | Code | Page | API call |
+|---|---|---|---|
+| Current health expenditure per capita (current US$) | `SH.XPD.CHEX.PC.CD` | <https://data.worldbank.org/indicator/SH.XPD.CHEX.PC.CD> | `api.worldbank.org/v2/country/all/indicator/SH.XPD.CHEX.PC.CD?format=json&date=2023` |
+| Life expectancy at birth, total (years) | `SP.DYN.LE00.IN` | <https://data.worldbank.org/indicator/SP.DYN.LE00.IN> | `api.worldbank.org/v2/country/all/indicator/SP.DYN.LE00.IN?format=json&date=2023` |
+| Population, total | `SP.POP.TOTL` | <https://data.worldbank.org/indicator/SP.POP.TOTL> | `api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?format=json&date=2023` |
 
 Country names, region, income group and capital-city coordinates come from
-`https://api.worldbank.org/v2/country`. Coordinates are what make `map.html` possible.
+`https://api.worldbank.org/v2/country`. The coordinates are what make `map.html` possible.
 
-```bash
-# the three indicator calls, one per row above
-curl "https://api.worldbank.org/v2/country/all/indicator/SP.DYN.LE00.IN?format=json&date=2018:2024&per_page=20000"
-```
+**Check any figure yourself.** The API returns plain JSON you can open in a browser — no code
+needed. Paste this and compare it with the table:
+
+<https://api.worldbank.org/v2/country/USA/indicator/SH.XPD.CHEX.PC.CD?format=json&date=2023>
+
+Replace `USA` with any ISO3 country code from the `ISO3` column, and the indicator code with
+either of the other two in the table above. Every row in this project was checked against the API
+this way when it was built, and all 100 matched.
 
 ### Cleaning log
 
 1. **Dropped World Bank aggregates.** The API returns rows like "Euro area" and "Africa Eastern
    and Southern" alongside real countries. Filtered on `region != "Aggregates"`, because an
    average of countries is not a country and would double-count in every chart.
-2. **Required all three indicators.** 211 countries had coordinates, 192 had complete health
-   data; rows missing either measurement were dropped rather than filled, because an imputed
-   life expectancy would quietly bend the scatter plot.
+2. **Required all three indicators for 2023.** 211 countries have coordinates; 190 had all three
+   values published for 2023. The rest were dropped rather than filled, because an imputed life
+   expectancy would quietly bend the scatter plot.
 3. **Cut to 100 rows.** The workshop caps files at about 100 rows. Kept the 100 most populous
-   countries with complete data, which covers ~90% of the world's people. **This is a real
-   exclusion**: 90-odd small states, many of them Pacific and Caribbean islands, are missing.
-4. **Kept one row per country per indicator.** Where the World Bank had several years, I took
-   the most recent non-null value, so the table mixes 2022 and 2023. Recorded here rather than
-   smoothed away.
+   countries, down to Turkmenistan at 7.4 million, covering ~90% of the world's population.
+   **This is a real exclusion**: about 90 states, many of them Pacific and Caribbean islands,
+   are not in this file at all.
+4. **No year mixing.** An earlier version took "the latest available year" per indicator, which
+   quietly produced a table where one country's spending was 2022 and another's was 2023 — and
+   made the headline numbers impossible to verify. Rebuilt on 2023 alone.
 5. **Separated numbers from units.** The CSV stores `13473.19`, not `$13,473`; `script.js`
    formats for display. Currency symbols inside data break numeric sorting.
 6. **Kept the coordinates as decimals** (`46.948`, `7.44821`) and made them the last two
@@ -65,11 +94,12 @@ curl "https://api.worldbank.org/v2/country/all/indicator/SP.DYN.LE00.IN?format=j
 
 - A tenfold increase in health spending is associated with **+8.4 years** of life expectancy
   (OLS on log₁₀ spending; Pearson r = 0.87 on the log scale, 0.61 on the raw scale).
-- High-income countries average **81.4 years**, low-income **64.1** — a **17.3-year** gap.
-- **20 countries** in the set sit below 65 years; **767 million** people live in them.
-- The United States spends the most per person (**$13,473**) and still lives **78.9 years** —
-  5.5 years less than Switzerland ($11,784) and 5.1 years less than Japan ($3,638).
-- Over-performers against the trend: Bangladesh (LE 74.9 on **$53** per person), Sri Lanka
+- High-income countries average **81.2 years** and **$4,445** per person; low-income **63.9**
+  and **$40** — a **17.3-year** gap for roughly **110×** the spending.
+- **21 countries** in the set sit below 65 years; **759 million** people live in them.
+- The United States spends the most per person (**$13,473**) and still lives **78.4 years** —
+  5.8 years less than Switzerland ($11,784 → 84.2) and 5.6 years less than Japan ($3,638 → 84.0).
+- Over-performers against the trend: Bangladesh (LE 74.7 on **$53** per person), Sri Lanka
   (77.7 on $134).
 
 ## Workshop checklist
@@ -114,6 +144,13 @@ obvious crash, which is why the console mattered.
 | 7 | `0` countries in the merged dataset | — | World Bank's `country.id` is **ISO2**, not ISO3; joining on it matched nothing | Rebuilt the join on `countryiso3code` |
 | 8 | Map background blank, page load hung | — (requests stalled, no error) | OpenStreetMap tiles hang rather than fail on restricted networks | Added a 6-second timeout as well as a `tileerror` handler, falling back to Esri tiles |
 | 9 | Heat map solid red | — | Population weights up to 1,450 against leaflet.heat's default `max` of 1 | Normalise weights to 1 and set `max: 1` |
+| 10 | Page said **"Showing 0 of 0 countries"** and nothing else | no error at all | `Papa.parse()` had *completed* with zero rows because the CSV was never reachable (the page was opened without its sibling CSV). I had only handled the error case, never the empty-result case | The error path now says plainly that the file could not be loaded and why; the page is served over http, which is the actual fix |
+| 11 | Table stayed empty even though the fallback ran | — | While deleting an unused variable I removed the `useRows(rows)` call with it, so data arrived and was dropped on the floor | Restored the call — then re-tested rather than assuming |
+| 12 | Map said "Plotting 100 countries" but drew **no bubbles** | — | `plot(rows)` shadowed the shared `rows` array, so `drawBubbles()` read an empty global | Renamed the parameter and assigned the global first |
+
+Bugs 10–12 are all the same lesson and it is the one the lecture was pointing at: **nothing showed
+an error message**. A blank result after a successful-looking operation is the failure mode to
+suspect next.
 
 ## Caveats
 
@@ -123,7 +160,9 @@ obvious crash, which is why the console mattered.
   exchange rates, which understates what money buys in poorer countries. The World Bank also
   publishes `SH.XPD.CHEX.PP.CD` (PPP-adjusted); switching to it would be the single most
   defensible improvement to this dataset.
-- **Mixed years.** Most recent available value per indicator, 2022–2023, not one single year.
+- **One year only (2023).** This is auditable, but it is also a snapshot: a single year's health
+  spending can be distorted by currency moves, and life expectancy by one-off events such as
+  COVID-19. The 2023 life-expectancy figures are still affected by pandemic mortality in places.
 - **Spending is not the only input.** Sanitation, diet, violence, road deaths and inequality all
   move life expectancy; the 8.4-year slope is an association, not a return on investment.
 - **Correlation, read as a curve.** The log fit is a description of the cloud, not a causal model.
