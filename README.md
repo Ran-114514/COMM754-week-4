@@ -5,12 +5,6 @@ It does the four core files (`index.html`, `script.js`, `style.css`, `healthdata
 chart step, the sort/filter step, and the Leaflet map step from the end of the lecture. The
 written reflection is in [REFLECTION.md](REFLECTION.md).
 
-## 中文速览
-
-- **看效果**：在 `health-inequality` 目录下运行 `python3 -m http.server 8000`，打开 <http://localhost:8000>；地图在 `/map.html`。**直接双击 index.html 会空白**，这是浏览器的 CORS 限制，不是代码坏了。
-- **数据**：世界银行开放数据，三个指标（人均医疗支出、出生时预期寿命、人口），取 2018–2024 年间各国最新可用年份，保留人口最大的 100 个国家。
-- **核心结论**：人均支出每增加 10 倍，预期寿命只多约 8.4 年（对数关系）；高收入组平均 81.4 岁，低收入组 64.1 岁，差 17.3 年。
-
 ## Files
 
 | File | What it does |
@@ -46,8 +40,12 @@ same one the workshop notes in Step 6. It disappears once the folder is served o
 
 Pulled from the World Bank API on 20 October 2026 (the API's own last update was 8 October 2026).
 **Every figure is for 2023** — the most recent year with near-complete coverage for all three
-indicators; health spending currently covers only 24 countries for 2024. No year is mixed with
+indicators — health spending covers only about two dozen countries for 2024. No year is mixed with
 another, and countries without a published 2023 value were dropped.
+
+> Coverage counts move around: the World Bank revises its back catalogue, and repeated queries can
+> return slightly different totals (190 or 191 complete countries; 22 or 24 countries for 2024).
+> Treat them as approximate; every figure **in the file** is fixed at 2023 and re-checkable.
 
 `healthdata.csv` is the only copy of the data in this project — the pages read it at runtime, so
 refreshing the numbers means replacing this one file.
@@ -75,9 +73,9 @@ this way when it was built, and all 100 matched.
 1. **Dropped World Bank aggregates.** The API returns rows like "Euro area" and "Africa Eastern
    and Southern" alongside real countries. Filtered on `region != "Aggregates"`, because an
    average of countries is not a country and would double-count in every chart.
-2. **Required all three indicators for 2023.** 211 countries have coordinates; 190 had all three
-   values published for 2023. The rest were dropped rather than filled, because an imputed life
-   expectancy would quietly bend the scatter plot.
+2. **Required all three indicators for 2023.** 211 countries have coordinates; about 190 had all
+   three values published for 2023 at build time. The rest were dropped rather than filled, because
+   an imputed life expectancy would quietly bend the scatter plot.
 3. **Cut to 100 rows.** The workshop caps files at about 100 rows. Kept the 100 most populous
    countries, down to Turkmenistan at 7.4 million, covering ~90% of the world's population.
    **This is a real exclusion**: about 90 states, many of them Pacific and Caribbean islands,
@@ -100,7 +98,7 @@ this way when it was built, and all 100 matched.
 - The United States spends the most per person (**$13,473**) and still lives **78.4 years** —
   5.8 years less than Switzerland ($11,784 → 84.2) and 5.6 years less than Japan ($3,638 → 84.0).
 - Over-performers against the trend: Bangladesh (LE 74.7 on **$53** per person), Sri Lanka
-  (77.7 on $134).
+  (77.5 on $134).
 
 ## Workshop checklist
 
