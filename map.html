@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map: Does Money Buy Years?</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>%F0%9F%8C%8D</text></svg>">
+
+    <!-- Leaflet draws the map; Leaflet.heat draws the heat layer -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="mapscript.js"></script>
+
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+    <header>
+        <h1>The Same Data, On A Map</h1>
+        <p class="standfirst">
+            Health spending and life expectancy for the 100 most populous countries.
+            Back to the <a href="index.html">table and charts</a>.
+        </p>
+    </header>
+
+    <p id="status" class="status">Loading data&hellip;</p>
+
+    <section class="controls">
+        <button id="bubbleBtn" type="button" class="active">Bubble map</button>
+        <button id="heatBtn" type="button">Heat map</button>
+    </section>
+
+    <div id="map"></div>
+
+    <section class="legend">
+        <div id="sizeLegend" class="legend-block">
+            <h3>Bubble size</h3>
+            <p>Health spending per person (not to scale &mdash; area is proportional to spending)</p>
+            <div class="size-scale">
+                <span class="ring small"></span><span class="ring mid"></span><span class="ring large"></span>
+                <span class="size-label">$50 &rarr; $500 &rarr; $13,500</span>
+            </div>
+        </div>
+        <div id="colourLegend" class="legend-block">
+            <h3>Colour — bubble</h3>
+            <p>Life expectancy at birth</p>
+            <ul class="colour-scale">
+                <li><span style="background:#b2182b"></span> under 60 years</li>
+                <li><span style="background:#ef8a62"></span> 60&ndash;70</li>
+                <li><span style="background:#fddbc7"></span> 70&ndash;75</li>
+                <li><span style="background:#d1e5f0"></span> 75&ndash;80</li>
+                <li><span style="background:#2166ac"></span> 80 years and over</li>
+            </ul>
+        </div>
+        <div id="heatLegend" class="legend-block" hidden>
+            <h3>Heat intensity</h3>
+            <div class="gradient-legend"></div>
+            <p>
+                Brighter means more people. The heat layer answers a different question from the
+                bubble map: not &ldquo;which countries spend most&rdquo; but &ldquo;where the
+                people are&rdquo;. Each point is weighted by national population, normalised to
+                the largest country in the set.
+            </p>
+        </div>
+    </section>
+
+    <footer>
+        <h2>Reading the two maps together</h2>
+        <p>
+            The bubble map is drawn from the capital city coordinates supplied by the World Bank,
+            so every point stands in for a whole country &mdash; it is a symbol map, not a survey.
+            The pattern it shows is that health spending and longevity are broadly spread
+            across Europe, North America and East Asia, while low-spending countries sit along a
+            band through sub-Saharan Africa and South Asia.
+        </p>
+        <p>
+            The heat map is built from exactly the same CSV file, which is the point worth
+            noticing: a single dataset can be made to argue two completely different things
+            depending on how it is drawn.
+        </p>
+        <p>
+            Source: <a href="https://data.worldbank.org/">World Bank Open Data</a>. Notes and
+            cleaning decisions are in <a href="README.md">README.md</a>.
+        </p>
+    </footer>
+
+</body>
+</html>

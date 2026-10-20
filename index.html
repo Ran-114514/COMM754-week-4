@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spending Health: Does Money Buy Years?</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>%F0%9F%8C%8D</text></svg>">
+
+    <!-- PapaParse reads our CSV file -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="script.js"></script>
+
+    <!-- Chart.js draws our two charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="chartscript.js"></script>
+
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+    <header>
+        <h1>Does Money Buy Years?</h1>
+        <p class="standfirst">
+            A civic look at health spending and life expectancy in the 100 most populous
+            countries. The data is published by the World Bank &mdash; it just usually stays
+            inside a spreadsheet. See it as a <a href="map.html">map</a>.
+        </p>
+    </header>
+
+    <p id="status" class="status">Loading data&hellip;</p>
+
+    <section id="stats" class="stats" hidden>
+        <div class="stat-card">
+            <span class="stat-value" id="statSlope">&mdash;</span>
+            <span class="stat-label">Extra years bought by spending 10&times; more per person &mdash; the returns shrink fast</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value" id="statGap">&mdash;</span>
+            <span class="stat-label">Gap in average life expectancy between the richest and poorest income groups shown</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value" id="statBelow65">&mdash;</span>
+            <span class="stat-label" id="statBelow65Label">Countries below 65 years, and the people who live in them</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value" id="statSpender">&mdash;</span>
+            <span class="stat-label" id="statSpenderLabel">Biggest spender per person shown, and how long its people actually live</span>
+        </div>
+    </section>
+
+    <section class="controls">
+        <label>
+            Search country
+            <input type="text" id="search" placeholder="e.g. Japan">
+        </label>
+        <label>
+            Region
+            <select id="regionFilter">
+                <option value="All">All regions</option>
+            </select>
+        </label>
+        <label>
+            Income group
+            <select id="incomeFilter">
+                <option value="All">All income groups</option>
+            </select>
+        </label>
+        <label>
+            Sort by
+            <select id="sortSelect">
+                <option value="LifeExpectancyYears-desc">Life expectancy (high to low)</option>
+                <option value="LifeExpectancyYears-asc">Life expectancy (low to high)</option>
+                <option value="HealthSpendPerCapitaUSD-desc">Health spend per person (high to low)</option>
+                <option value="HealthSpendPerCapitaUSD-asc">Health spend per person (low to high)</option>
+                <option value="PopulationMillions-desc">Population (largest first)</option>
+                <option value="Country-asc">Country name (A-Z)</option>
+            </select>
+        </label>
+        <button id="resetBtn" type="button">Reset</button>
+    </section>
+
+    <div class="table-wrap">
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>Country</th>
+                    <th>Region</th>
+                    <th>Income group</th>
+                    <th>Population (m)</th>
+                    <th>Health spend per person (USD)</th>
+                    <th>Life expectancy (years)</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Two ways of looking at the same rows</h2>
+
+    <div class="chart-pair">
+        <figure class="chart-box">
+            <figcaption>
+                <strong>Spending vs outcome.</strong> This is a scatter plot rather than a bar
+                chart, because we are comparing two measurements, not ranking categories.
+                Note the horizontal axis is logarithmic &mdash; otherwise nearly every country
+                would be squashed against the left-hand edge.
+            </figcaption>
+            <canvas id="scatterChart"></canvas>
+        </figure>
+
+        <figure class="chart-box">
+            <figcaption>
+                <strong>Averages by income group.</strong> A bar chart works well here because
+                these are groups, not individuals. Both charts respond to the filters above.
+            </figcaption>
+            <canvas id="groupChart"></canvas>
+        </figure>
+    </div>
+
+    <footer>
+        <h2>Where this comes from, and what it leaves out</h2>
+        <p>
+            Source: <a href="https://data.worldbank.org/">World Bank Open Data</a>, most recent
+            year available for each indicator (2018&ndash;2024): health expenditure per capita
+            (current US$, <code>SH.XPD.CHEX.PC.CD</code>), life expectancy at birth
+            (<code>SP.DYN.LE00.IN</code>) and population (<code>SP.POP.TOTL</code>). Full notes,
+            including every cleaning decision, are in <a href="README.md">README.md</a>.
+        </p>
+        <p>
+            The important caveat: <em>everything here is a national average.</em> A single
+            number per country hides who within it gets the care. The country with the highest
+            average life expectancy in this dataset can still have enormous internal gaps.
+            Seeing a clean trend in a scatter plot is exactly the moment to ask what the average
+            is concealing.
+        </p>
+    </footer>
+
+</body>
+</html>
