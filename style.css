@@ -278,6 +278,11 @@ tr:hover {
     );
 }
 
+.sources {
+    margin: 0 0 12px;
+    padding-left: 20px;
+}
+
 footer {
     margin-top: 48px;
     padding-top: 16px;
