@@ -123,11 +123,29 @@
     <footer>
         <h2>Where this comes from, and what it leaves out</h2>
         <p>
-            Source: <a href="https://data.worldbank.org/">World Bank Open Data</a>, most recent
-            year available for each indicator (2018&ndash;2024): health expenditure per capita
-            (current US$, <code>SH.XPD.CHEX.PC.CD</code>), life expectancy at birth
-            (<code>SP.DYN.LE00.IN</code>) and population (<code>SP.POP.TOTL</code>). Full notes,
-            including every cleaning decision, are in <a href="README.md">README.md</a>.
+            Source: <strong>World Bank Open Data, 2023 only</strong> &mdash; every figure in this
+            table is for the same year, taken from the World Bank API:
+        </p>
+        <ul class="sources">
+            <li>
+                Health spending per person, current US$ &mdash;
+                <a href="https://data.worldbank.org/indicator/SH.XPD.CHEX.PC.CD"><code>SH.XPD.CHEX.PC.CD</code></a>
+            </li>
+            <li>
+                Life expectancy at birth, total (years) &mdash;
+                <a href="https://data.worldbank.org/indicator/SP.DYN.LE00.IN"><code>SP.DYN.LE00.IN</code></a>
+            </li>
+            <li>
+                Population &mdash;
+                <a href="https://data.worldbank.org/indicator/SP.POP.TOTL"><code>SP.POP.TOTL</code></a>
+            </li>
+        </ul>
+        <p>
+            Any single row can be re-checked against the API in a browser, for example the
+            <a href="https://api.worldbank.org/v2/country/USA/indicator/SH.XPD.CHEX.PC.CD?format=json&date=2023">2023
+            figure for the United States</a> (swap the country code and the indicator code in that
+            URL). Full notes, including every cleaning decision, are in
+            <a href="README.md">README.md</a>.
         </p>
         <p>
             The important caveat: <em>everything here is a national average.</em> A single
@@ -137,6 +155,5 @@
             is concealing.
         </p>
     </footer>
-
 </body>
 </html>
