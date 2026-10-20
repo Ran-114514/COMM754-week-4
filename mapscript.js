@@ -72,6 +72,27 @@ function initMap() {
     osm.addTo(map);
 }
 
+function toRows(data) {
+    return data
+        .map(row => ({
+            Country: row.Country,
+            LifeExpectancyYears: Number(row.LifeExpectancyYears),
+            HealthSpendPerCapitaUSD: Number(row.HealthSpendPerCapitaUSD),
+            PopulationMillions: Number(row.PopulationMillions),
+            IncomeGroup: row.IncomeGroup,
+            Latitude: Number(row.Latitude),
+            Longitude: Number(row.Longitude)
+        }))
+        // A single bad coordinate would throw Leaflet off, so drop unusable rows first.
+        .filter(row =>
+            row.Country &&
+            Number.isFinite(row.Latitude) &&
+            Number.isFinite(row.Longitude) &&
+            Number.isFinite(row.LifeExpectancyYears) &&
+            Number.isFinite(row.HealthSpendPerCapitaUSD)
+        );
+}
+
 function loadData() {
     Papa.parse('healthdata.csv', {
         download: true,
@@ -79,39 +100,26 @@ function loadData() {
         skipEmptyLines: true,
 
         complete: function (results) {
-            rows = results.data
-                .map(row => ({
-                    Country: row.Country,
-                    LifeExpectancyYears: Number(row.LifeExpectancyYears),
-                    HealthSpendPerCapitaUSD: Number(row.HealthSpendPerCapitaUSD),
-                    PopulationMillions: Number(row.PopulationMillions),
-                    IncomeGroup: row.IncomeGroup,
-                    Latitude: Number(row.Latitude),
-                    Longitude: Number(row.Longitude)
-                }))
-                // A single bad coordinate would throw Leaflet off, so drop unusable rows first.
-                .filter(row =>
-                    row.Country &&
-                    Number.isFinite(row.Latitude) &&
-                    Number.isFinite(row.Longitude) &&
-                    Number.isFinite(row.LifeExpectancyYears) &&
-                    Number.isFinite(row.HealthSpendPerCapitaUSD)
-                );
-
-            console.log('Map rows:', rows.length);
-            setStatus(`Plotting ${rows.length} countries.`);
-            drawBubbles();
+            plot(toRows(results.data));
         },
 
         error: function (err) {
-            console.error('Failed to load CSV', err);
+            console.error('Failed to load healthdata.csv', err);
             setStatus(
-                'Could not load healthdata.csv - if you opened this file from disk (file://) ' +
-                'the download is blocked. Serve the folder over http or use GitHub Pages.',
+                'Could not load healthdata.csv - if you opened this page from disk (file://) the ' +
+                'download is blocked. Serve the folder over http or publish it on GitHub Pages ' +
+                '(see README.md).',
                 true
             );
         }
     });
+}
+
+function plot(data) {
+    rows = data;                 // drawBubbles() reads the shared `rows` array
+    console.log('Map rows:', rows.length);
+    setStatus(`Plotting ${rows.length} countries.`);
+    drawBubbles();
 }
 
 function drawBubbles() {
